@@ -115,6 +115,8 @@ function DevpodProvider:clean_up_remote_host()
 end
 
 function DevpodProvider:stop_neovim()
+  -- # TODO: stop container only when specified or if plugin created/started container
+  --
   -- local cb = function()
   --   if self._devpod_workspace_active then
   --     self:_run_code_in_coroutine(function()
@@ -162,14 +164,6 @@ function DevpodProvider:_handle_provider_setup()
       ("Checking if the %s provider is present"):format(self._devpod_provider)
     )
     local stdout = self.local_provider.executor:job_stdout()
-
-    local raw_output = table.concat(stdout, "\n")
-
-    vim.fn.writefile({
-      "Length: " .. #raw_output,
-      "First bytes: " .. vim.inspect({ raw_output:byte(1, 32) }),
-      "Output: " .. vim.inspect(raw_output),
-    }, "/tmp/remote-nvim-devpod-output.log")
 
     local provider_list_output = vim.json.decode(vim.tbl_isempty(stdout) and "{}" or table.concat(stdout, "\n"))
 

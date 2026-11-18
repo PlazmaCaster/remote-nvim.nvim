@@ -76,35 +76,14 @@ function Executor:run_executor_job(command, job_opts)
   job_opts = job_opts or {}
 
   self:reset() -- Reset job internal state variables
-  ---- TEMP
-  vim.fn.writefile({
-    "COMMAND: " .. vim.inspect(command),
-    "PTY: false",
-  }, "/tmp/remote-nvim-executor-debug.log", "a")
-  ----
   self._job_id = vim.fn.jobstart(command, {
-    -- pty = true,
     pty = self.use_pty,
     on_stdout = function(_, data_chunk)
-      vim.fn.writefile({
-        "STDOUT: " .. vim.inspect(data_chunk),
-      }, "/tmp/remote-nvim-executor-debug.log", "a")
-
       -- self:process_stdout(data_chunk, job_opts.stdout_cb)
       self:process_stdout(data_chunk, nil)
     end,
 
-    on_stderr = function(_, data_chunk)
-      vim.fn.writefile({
-        "STDERR: " .. vim.inspect(data_chunk),
-      }, "/tmp/remote-nvim-executor-debug.log", "a")
-    end,
-
     on_exit = function(_, exit_code)
-      vim.fn.writefile({
-        "EXIT CODE: " .. tostring(exit_code),
-        "---",
-      }, "/tmp/remote-nvim-executor-debug.log", "a")
       self:process_job_completion(exit_code)
       if job_opts.exit_cb ~= nil then
         job_opts.exit_cb(exit_code)
