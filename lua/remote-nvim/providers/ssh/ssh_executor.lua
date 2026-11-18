@@ -28,6 +28,7 @@ function SSHExecutor:init(host, conn_opts)
 
   self._job_stdout_processed_idx = 0
   self._job_prompt_responses = {}
+  self.use_pty = true
 end
 
 ---Reset ssh executor

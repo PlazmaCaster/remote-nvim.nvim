@@ -115,19 +115,20 @@ function DevpodProvider:clean_up_remote_host()
 end
 
 function DevpodProvider:stop_neovim()
-  local cb = function()
-    if self._devpod_workspace_active then
-      self:_run_code_in_coroutine(function()
-        self.local_provider:run_command(
-          ("%s stop %s %s"):format(self.binary, table.concat(self._default_opts, " "), self.unique_host_id),
-          "Stopping devpod workspace"
-        )
-      end, "Stopping devpod workspace")
-      self._devpod_workspace_active = false
-    end
-  end
-
-  DevpodProvider.super.stop_neovim(self, cb)
+  -- local cb = function()
+  --   if self._devpod_workspace_active then
+  --     self:_run_code_in_coroutine(function()
+  --       self.local_provider:run_command(
+  --         ("%s stop %s %s"):format(self.binary, table.concat(self._default_opts, " "), self.unique_host_id),
+  --         "Stopping devpod workspace"
+  --       )
+  --     end, "Stopping devpod workspace")
+  --     self._devpod_workspace_active = false
+  --   end
+  -- end
+  --
+  -- DevpodProvider.super.stop_neovim(self, cb)
+  DevpodProvider.super.stop_neovim(self)
 end
 
 function DevpodProvider:_stop_devpod_workspace()
@@ -161,6 +162,15 @@ function DevpodProvider:_handle_provider_setup()
       ("Checking if the %s provider is present"):format(self._devpod_provider)
     )
     local stdout = self.local_provider.executor:job_stdout()
+
+    local raw_output = table.concat(stdout, "\n")
+
+    vim.fn.writefile({
+      "Length: " .. #raw_output,
+      "First bytes: " .. vim.inspect({ raw_output:byte(1, 32) }),
+      "Output: " .. vim.inspect(raw_output),
+    }, "/tmp/remote-nvim-devpod-output.log")
+
     local provider_list_output = vim.json.decode(vim.tbl_isempty(stdout) and "{}" or table.concat(stdout, "\n"))
 
     -- If the provider does not exist, let's create it
@@ -180,11 +190,11 @@ function DevpodProvider:launch_neovim()
       self._neovim_launch_number = self._neovim_launch_number + 1
 
       self:_launch_devpod_workspace()
-      vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
-        callback = function()
-          self:_stop_devpod_workspace()
-        end,
-      })
+      -- vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
+      --   callback = function()
+      --     self:_stop_devpod_workspace()
+      --   end,
+      -- })
     end
     self:_launch_neovim(false)
   end, "Launching devpod workspace")
